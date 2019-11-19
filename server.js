@@ -48,11 +48,6 @@ app.delete('/crud', (req, res) => main.deleteTableData(req, res, db));
 
 async function start() {
   try {
-    // await mongoose.connect('', {
-    //   useNewUrlParser: true,
-    //   useFindAndModify: false
-    // });
-
     main.requireTable(db);
 
     app.listen(PORT, () => {

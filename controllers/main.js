@@ -1,15 +1,19 @@
+const uuidv4 = require('uuid/v4');
+
 const requireTable = (db) => {
   db.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
   db.schema.hasTable('recipelist')
     .then(function(exists) {
       if (!exists) {
         return db.schema.createTable('recipelist', function(t) {
+          // t.uuid('id').defaultTo(db.raw('uuid_generate_v4()')).primary();
           t.uuid('id').defaultTo(db.raw('uuid_generate_v4()')).primary();
           t.string('title', 100);
           t.text('reason');
           t.text('description');
           t.dateTime('createDate');
           t.dateTime('changeDate');
+          t.uuid('parent');
         });
       }
     })
@@ -33,14 +37,30 @@ const getTableData = (req, res, db) => {
 
 const postTableData = (req, res, db) => {
   // const { first, last, email, phone, location, hobby } = req.body
-  const { title, reason, description } = req.body
-  const createdate = new Date()
-  db('recipelist').insert({title, reason, description, createdate })
+  let { title, reason, description, id, parent, createDate, changeDate } = req.body;
+  const v4 = uuidv4();
+  const date = new Date();
+
+  if (!parent && !id) {
+    id = v4;
+    parent = v4;
+    createDate = date;
+    changeDate = date;
+  } else {
+    id = v4;
+    changeDate = date;
+  }
+
+
+  db('recipelist').insert({ id, title, reason, description, createDate, changeDate, parent })
     .returning('*')
     .then(item => {
       res.json(item)
     })
-    .catch(err => res.status(400).json({dbError: 'db error'}))
+    .catch(err => {
+      console.log(err)
+      res.status(400).json({dbError: 'db error'})
+    })
 };
 
 const putTableData = (req, res, db) => {
