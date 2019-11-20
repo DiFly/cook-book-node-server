@@ -24,7 +24,32 @@ const requireTable = (db) => {
 };
 
 const getTableData = (req, res, db) => {
-  db.select('*').from('recipelist')
+  db.select('*')
+    .orderBy('changeDate', 'desc')
+    .from('recipelist')
+    // .groupBy('parent')
+    // .having('COUNT(*) = 1') // not working :( maybe distinct data on client, or use raw request without knex
+    .then(items => {
+      if(items.length){
+        res.json(items)
+      } else {
+        res.json([])
+      }
+    })
+    .catch(err => {
+      console.log(err)
+      res.status(400).json({dbError: 'db error'})
+    })
+};
+
+const getTableDataById = (req, res, db) => {
+  const userId = req.params.getListById;
+
+  db.where({
+    parent: userId
+  })
+    .orderBy('changeDate', 'desc')
+    .select('*').from('recipelist')
     .then(items => {
       if(items.length){
         res.json(items)
@@ -32,12 +57,15 @@ const getTableData = (req, res, db) => {
         res.json({dataExists: 'false'})
       }
     })
-    .catch(err => res.status(400).json({dbError: 'db error'}))
+    .catch(err => {
+      console.log(err)
+      res.status(400).json({dbError: 'db error'})
+    })
 };
 
 const postTableData = (req, res, db) => {
-  // const { first, last, email, phone, location, hobby } = req.body
   let { title, reason, description, id, parent, createDate, changeDate } = req.body;
+  console.log('postTableData', req.body);
   const v4 = uuidv4();
   const date = new Date();
 
@@ -85,6 +113,7 @@ const deleteTableData = (req, res, db) => {
 module.exports = {
   requireTable,
   getTableData,
+  getTableDataById,
   postTableData,
   putTableData,
   deleteTableData
