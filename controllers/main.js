@@ -24,23 +24,30 @@ const requireTable = (db) => {
 };
 
 const getTableData = (req, res, db) => {
-  db.select('*')
-    .orderBy('changeDate', 'desc')
-    .from('recipelist')
-    // .groupBy('parent')
-    // .having('COUNT(*) = 1') // not working :( maybe distinct data on client, or use raw request without knex
-    .then(items => {
-      if(items.length){
-        res.json(items)
-      } else {
-        res.json([])
-      }
-    })
-    .catch(err => {
-      console.log(err)
-      res.status(400).json({dbError: 'db error'})
-    })
-};
+                                         // SELECT id, title, description, reason, createDate, changeDate, parent FROM recipelist
+                                         // WHERE changeDate IN(
+                                         //    SELECT Max(changeDate) FROM recipelist GROUP BY parent)
+                                         // ORDER BY changeDate DESC
+
+                                         db.select("*")
+                                           .orderBy("changeDate", "desc")
+                                           .from("recipelist")
+                                           // .groupBy('parent')
+                                           // .having('COUNT(*) = 1') // not working :( maybe distinct data on client, or use raw request without knex
+                                           .then(items => {
+                                             if (items.length) {
+                                               res.json(items);
+                                             } else {
+                                               res.json([]);
+                                             }
+                                           })
+                                           .catch(err => {
+                                             console.log(err);
+                                             res
+                                               .status(400)
+                                               .json({ dbError: "db error" });
+                                           });
+                                       };
 
 const getTableDataById = (req, res, db) => {
   const userId = req.params.getListById;
